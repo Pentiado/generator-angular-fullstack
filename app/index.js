@@ -145,14 +145,57 @@ Generator.prototype.welcome = function welcome() {
   }
 };
 
+Generator.prototype.askForGulp = function askForGulp() {
+  var cb = this.async();
+
+  this.prompt([{
+    type: 'confirm',
+    name: 'gulp',
+    message: 'Would you like to use Gulp instead of Grunt?',
+    default: false
+  }], function (props) {
+    this.gulp = props.gulp;
+
+    cb();
+  }.bind(this));
+};
+
+Generator.prototype.askForStyles = function askForStyles() {
+  var gulp = this.gulp;
+  var cb = this.async();
+
+  this.prompt([{
+    type: 'list',
+    name: 'styles',
+    message: 'Would you like to use css preprocessor?',
+    choices: [
+      {name: 'Sass with Compass', value: 'compass'},
+      {name: 'Stylus with Nib', value: 'stylus'},
+      {name: 'Less', value: 'less'},
+      {name: 'No', value: 'css'}
+    ],
+    when: function () {
+      return gulp;
+    }
+  }], function (props) {
+    this[props.styles] = true;
+
+    cb();
+  }.bind(this));
+};
+
 Generator.prototype.askForCompass = function askForCompass() {
+  var gulp = this.gulp;
   var cb = this.async();
 
   this.prompt([{
     type: 'confirm',
     name: 'compass',
     message: 'Would you like to use Sass (with Compass)?',
-    default: true
+    default: true,
+    when: function () {
+      return !!gulp;
+    }
   }], function (props) {
     this.compass = props.compass;
 
@@ -431,7 +474,11 @@ Generator.prototype.packageFiles = function () {
   this.coffee = this.env.options.coffee;
   this.template('../../templates/common/_bower.json', 'bower.json');
   this.template('../../templates/common/_package.json', 'package.json');
-  this.template('../../templates/common/Gruntfile.js', 'Gruntfile.js');
+  if (this.gulp) {
+    this.template('../../templates/common/Gulpfile.js', 'Gulpfile.js');
+  } else {
+    this.template('../../templates/common/Gruntfile.js', 'Gruntfile.js');
+  }
 };
 
 Generator.prototype.imageFiles = function () {
