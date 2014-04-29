@@ -151,7 +151,7 @@ Generator.prototype.askForGulp = function askForGulp() {
   this.prompt([{
     type: 'confirm',
     name: 'gulp',
-    message: 'Would you like to use Gulp instead of Grunt?',
+    message: 'Would you like to use Gulp (experimental) instead of Grunt?',
     default: false
   }], function (props) {
     this.gulp = props.gulp;
@@ -165,38 +165,23 @@ Generator.prototype.askForStyles = function askForStyles() {
   var cb = this.async();
 
   this.prompt([{
-    type: 'list',
-    name: 'styles',
-    message: 'Would you like to use css preprocessor?',
-    choices: [
-      {name: 'Sass with Compass', value: 'compass'},
-      {name: 'Stylus with Nib', value: 'stylus'},
-      {name: 'Less', value: 'less'},
-      {name: 'No', value: 'css'}
-    ],
+    type: 'confirm',
+    name: 'stylus',
+    message: 'Would you like to use Stylus (with Nib)?',
+    default: true,
     when: function () {
       return gulp;
     }
-  }], function (props) {
-    this[props.styles] = true;
-
-    cb();
-  }.bind(this));
-};
-
-Generator.prototype.askForCompass = function askForCompass() {
-  var gulp = this.gulp;
-  var cb = this.async();
-
-  this.prompt([{
+  }, {
     type: 'confirm',
     name: 'compass',
     message: 'Would you like to use Sass (with Compass)?',
     default: true,
     when: function () {
-      return !!gulp;
+      return !gulp;
     }
   }], function (props) {
+    this.stylus = props.stylus;
     this.compass = props.compass;
 
     cb();
