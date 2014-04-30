@@ -148,21 +148,14 @@ gulp.task('watch', function () {
 
   $.watch({glob: paths.client.scripts})
     .pipe($.plumber())
-    .pipe(lintScripts())
+    .pipe(lintScripts())<% if (coffee) { %>
+    .pipe($.coffee({bare: true}).on('error', $.util.log))
+    .pipe(gulp.dest('.tmp/scripts'))<% } %>
     .pipe($.livereload());
 
   $.watch({glob: paths.server.scripts.concat(testFiles)})
     .pipe($.plumber())
     .pipe(lintScripts());
-
-  $.watch({glob: 'app/scripts/**/*.' + jsType})
-    .pipe($.plumber())
-    .pipe(lintScripts())
-    <% if (coffee) %>
-    .pipe($.coffee({bare: true}).on('error', $.util.log))
-    .pipe(gulp.dest('.tmp/scripts'))
-    <% } %>
-    .pipe($.livereload());
 
   gulp.watch('bower.json', ['bower']);
 });
@@ -176,7 +169,7 @@ gulp.task('serve', function (callback) {
 
 gulp.task('test:server', function () {
   process.env.NODE_ENV = 'test';
-  return gulp.src('test/server/**/*.' + jsType)
+  return gulp.src(paths.server.test)
     .pipe($.mocha({reporter: 'spec'}));
 });
 
@@ -201,10 +194,9 @@ gulp.task('test:client:single', function () {
 
 // inject bower components
 gulp.task('bower', function () {
-  return gulp.src('app/views/index.jade')
+  return gulp.src(paths.views.main)
     .pipe(wiredep({
       directory: './app/bower_components',
-      exclude: ['bootstrap-sass-official'],
       ignorePath: '..'
     }))
   .pipe(gulp.dest('app/views/'));
@@ -226,11 +218,11 @@ gulp.task('clean:dist', function () {
 
 gulp.task('client:build', ['html'], function () {
   var jsFilter = $.filter('**/*.js');
-  var cssFilter = $.filter('**/*.css');
-  var assets = $.filter('**/*.{js,css}');
+  var cssFilter = $.filter('**/*.css');<% if (jade) { %>
+  var assets = $.filter('**/*.{js,css}');<% } %>
 
-  return gulp.src('app/views/index.jade')
-    .pipe($.jade({pretty: true}))
+  return gulp.src(paths.views.main)<% if (jade) { %>
+    .pipe($.jade({pretty: true}))<% } %>
     .pipe($.useref.assets({searchPath: ['./app/', './.tmp/']}))
     .pipe(jsFilter)
     .pipe($.uglify())
@@ -241,8 +233,8 @@ gulp.task('client:build', ['html'], function () {
     .pipe($.rev())
     .pipe($.useref.restore())
     .pipe($.revReplace())
-    .pipe($.useref())
-    .pipe(assets)
+    .pipe($.useref())<% if (jade) { %>
+    .pipe(assets)<% } %>
     .pipe(gulp.dest('dist/public'));
 });
 
